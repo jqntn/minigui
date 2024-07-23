@@ -19,6 +19,7 @@ target_sources(minigui PRIVATE
   "${minigui_src}")
 
 target_include_directories(minigui PRIVATE
+  "."
   "include"
   "${glfw_SOURCE_DIR}")
 
