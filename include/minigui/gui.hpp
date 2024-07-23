@@ -3,16 +3,29 @@
 namespace minigui {
 class Backend;
 
+struct Config
+{
+  int window_width = 1280;
+  int window_height = 720;
+  const char* window_title = "window_title";
+  bool show_gl_version = false;
+};
+
 class GUI
 {
 public:
-  GUI(const Backend& backend);
+  GUI(const Backend& backend, const Config& config = {});
 
   virtual void init() = 0;
   virtual void render() = 0;
   virtual void shutdown() = 0;
 
+  const Config& get_config() const { return m_config; }
+
 protected:
-  const Backend& backend;
+  const Backend& m_backend;
+
+private:
+  Config m_config;
 };
 }

@@ -16,16 +16,17 @@
 #include <deps/nuklear_glfw_gl2.h>
 #include <format>
 #include <gl/GL.h>
+#include <memory>
 #include <minigui/backend.hpp>
-#include <minigui/backend_config.hpp>
+#include <minigui/gui.hpp>
 #include <string>
 #include <type_traits>
 
 namespace minigui {
 void
-Backend::run(const BackendConfig& config)
+Backend::run(std::unique_ptr<GUI>&& p_gui)
 {
-  m_p_gui = std::move(config.p_gui);
+  m_p_gui = std::move(p_gui);
 
   glfwSetErrorCallback([](int error_code, const char* description) {
     std::fprintf(stderr, "GLFW Error %d: %s\n", error_code, description);
@@ -35,9 +36,9 @@ Backend::run(const BackendConfig& config)
     std::abort();
   }
 
-  m_p_window = glfwCreateWindow(config.window_width,
-                                config.window_height,
-                                config.window_title,
+  m_p_window = glfwCreateWindow(m_p_gui->get_config().window_width,
+                                m_p_gui->get_config().window_height,
+                                m_p_gui->get_config().window_title,
                                 nullptr,
                                 nullptr);
   if (nullptr == m_p_window) {
@@ -58,13 +59,15 @@ Backend::run(const BackendConfig& config)
   glfwGetMonitorPos(pp_monitors[0], &monitor_x, &monitor_y);
   glfwSetWindowPos(
     m_p_window,
-    monitor_x + (p_video_mode->width - config.window_width) * 0.5f,
-    monitor_y + (p_video_mode->height - config.window_height) * 0.5f);
+    monitor_x +
+      (p_video_mode->width - m_p_gui->get_config().window_width) * 0.5f,
+    monitor_y +
+      (p_video_mode->height - m_p_gui->get_config().window_height) * 0.5f);
 
   glfwMakeContextCurrent(m_p_window);
   glfwSwapInterval(1);
 
-  if (config.show_gl_version) {
+  if (m_p_gui->get_config().show_gl_version) {
     std::string version =
       reinterpret_cast<const char*>(glGetString(GL_VERSION));
     std::string old_title = glfwGetWindowTitle(m_p_window);
@@ -82,9 +85,7 @@ Backend::run(const BackendConfig& config)
   nk_glfw3_font_stash_begin(&atlas);
   nk_glfw3_font_stash_end();
 
-  if (nullptr != m_p_gui) {
-    m_p_gui->init();
-  }
+  m_p_gui->init();
 
   while (GLFW_NO_ERROR == glfwWindowShouldClose(m_p_window)) {
     glfwPollEvents();
@@ -97,18 +98,14 @@ Backend::run(const BackendConfig& config)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (nullptr != m_p_gui) {
-      m_p_gui->render();
-    }
+    m_p_gui->render();
 
     nk_glfw3_render(NK_ANTI_ALIASING_ON);
 
     glfwSwapBuffers(m_p_window);
   }
 
-  if (nullptr != m_p_gui) {
-    m_p_gui->shutdown();
-  }
+  m_p_gui->shutdown();
 
   nk_glfw3_shutdown();
 

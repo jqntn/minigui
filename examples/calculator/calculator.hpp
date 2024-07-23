@@ -18,7 +18,13 @@ public:
 
 namespace minigui {
 Calculator::Calculator(const Backend& backend)
-  : GUI(backend)
+  : GUI(backend,
+        Config{
+          .window_width = 1280,
+          .window_height = 720,
+          .window_title = "calculator",
+          .show_gl_version = true,
+        })
 {
 }
 

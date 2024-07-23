@@ -6,12 +6,10 @@
 struct GLFWwindow;
 
 namespace minigui {
-struct BackendConfig;
-
 class Backend
 {
 public:
-  void run(const BackendConfig& config);
+  void run(std::unique_ptr<GUI>&& p_gui);
 
 private:
   GLFWwindow* m_p_window = nullptr;
