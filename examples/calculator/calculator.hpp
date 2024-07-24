@@ -23,7 +23,6 @@ Calculator::Calculator(const Backend& backend)
           .window_width = 1280,
           .window_height = 720,
           .window_title = "calculator",
-          .show_gl_version = true,
         })
 {
 }

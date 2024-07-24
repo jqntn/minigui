@@ -26,7 +26,13 @@ namespace minigui {
 void
 Backend::run(std::unique_ptr<GUI>&& p_gui)
 {
-  m_p_gui = std::move(p_gui);
+  if (nullptr != p_gui) {
+    m_p_gui = std::move(p_gui);
+  } else {
+    m_p_gui = std::make_unique<minigui::GUI>(*this);
+  }
+
+  const Config& config = m_p_gui->get_config();
 
   glfwSetErrorCallback([](int error_code, const char* description) {
     std::fprintf(stderr, "GLFW Error %d: %s\n", error_code, description);
@@ -36,9 +42,9 @@ Backend::run(std::unique_ptr<GUI>&& p_gui)
     std::abort();
   }
 
-  m_p_window = glfwCreateWindow(m_p_gui->get_config().window_width,
-                                m_p_gui->get_config().window_height,
-                                m_p_gui->get_config().window_title,
+  m_p_window = glfwCreateWindow(config.window_width,
+                                config.window_height,
+                                config.window_title,
                                 nullptr,
                                 nullptr);
   if (nullptr == m_p_window) {
@@ -59,15 +65,13 @@ Backend::run(std::unique_ptr<GUI>&& p_gui)
   glfwGetMonitorPos(pp_monitors[0], &monitor_x, &monitor_y);
   glfwSetWindowPos(
     m_p_window,
-    monitor_x +
-      (p_video_mode->width - m_p_gui->get_config().window_width) * 0.5f,
-    monitor_y +
-      (p_video_mode->height - m_p_gui->get_config().window_height) * 0.5f);
+    monitor_x + (p_video_mode->width - config.window_width) * 0.5f,
+    monitor_y + (p_video_mode->height - config.window_height) * 0.5f);
 
   glfwMakeContextCurrent(m_p_window);
   glfwSwapInterval(1);
 
-  if (m_p_gui->get_config().show_gl_version) {
+  if (config.show_gl_version) {
     std::string version =
       reinterpret_cast<const char*>(glGetString(GL_VERSION));
     std::string old_title = glfwGetWindowTitle(m_p_window);
@@ -75,9 +79,8 @@ Backend::run(std::unique_ptr<GUI>&& p_gui)
     glfwSetWindowTitle(m_p_window, new_title.c_str());
   }
 
-  nk_context* p_nk_context =
-    nk_glfw3_init(m_p_window, NK_GLFW3_INSTALL_CALLBACKS);
-  if (nullptr == p_nk_context) {
+  m_p_context = nk_glfw3_init(m_p_window, NK_GLFW3_INSTALL_CALLBACKS);
+  if (nullptr == m_p_context) {
     std::abort();
   }
 
@@ -98,14 +101,18 @@ Backend::run(std::unique_ptr<GUI>&& p_gui)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    m_p_gui->render();
+    if (nullptr != m_p_gui) {
+      m_p_gui->render();
+    }
 
     nk_glfw3_render(NK_ANTI_ALIASING_ON);
 
     glfwSwapBuffers(m_p_window);
   }
 
-  m_p_gui->shutdown();
+  if (nullptr != m_p_gui) {
+    m_p_gui->shutdown();
+  }
 
   nk_glfw3_shutdown();
 
