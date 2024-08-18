@@ -14,11 +14,15 @@ struct Config
 class GUI
 {
 public:
-  GUI(const Backend& backend, const Config& config = {});
+  GUI(const Backend& backend, const Config& config)
+    : m_backend(backend)
+    , m_config(config)
+  {
+  }
 
-  virtual void init();
-  virtual void render();
-  virtual void shutdown();
+  virtual void init() = 0;
+  virtual void render() = 0;
+  virtual void shutdown() = 0;
 
   const Config& get_config() const { return m_config; }
 

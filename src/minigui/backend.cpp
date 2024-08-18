@@ -26,11 +26,7 @@ namespace minigui {
 void
 Backend::run(std::unique_ptr<GUI>&& p_gui)
 {
-  if (nullptr != p_gui) {
-    m_p_gui = std::move(p_gui);
-  } else {
-    m_p_gui = std::make_unique<minigui::GUI>(*this);
-  }
+  m_p_gui = std::move(p_gui);
 
   const Config& config = m_p_gui->get_config();
 
